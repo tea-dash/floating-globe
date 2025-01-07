@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Globe</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- 更新された大気効果用のシェーダー -->
+    <script id="atmosphereVertexShader" type="x-shader/x-vertex">
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        uniform float time;
+        
+        void main() {
+            vNormal = normalize(normalMatrix * normal);
+            vPosition = position;
+            
+            // 波のような動きを追加
+            float wave = sin(position.x * 2.0 + time) * cos(position.y * 2.0 + time) * 0.1;
+            vec3 newPosition = position + normal * wave;
+            
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+        }
+    </script>
+    
+    <script id="atmosphereFragmentShader" type="x-shader/x-fragment">
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        uniform float time;
+        
+        void main() {
+            float intensity = pow(0.6 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 1.5);
+            vec3 color = mix(
+                vec3(0.3, 0.6, 1.0),  // 基本色
+                vec3(0.6, 0.8, 1.0),   // ハイライト色
+                sin(time * 0.5) * 0.5 + 0.5
+            );
+            gl_FragColor = vec4(color, 1.0) * intensity * 1.5;
+        }
+    </script>
+
+    <script src="main.js"></script>
+</body>
+</html>
